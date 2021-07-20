@@ -21,11 +21,11 @@ docker run -it --rm --volume $PWD:/home/localdir --volume $PWD/output:/var/MG_ou
 
 The Docker container is an isolated environment. The `--volume` command line arguments in the call of `docker run` bind local directories on your machine and allow for accessing them and writing to them from the Docker container.
 
-Therefore, you can use the MadGraph installation (`/home/hep/MG5_aMC_v2_9_1_2/bin/mg5_aMC`) together with the config file from this project (`commands/simple/generate_bsm4top-13TeV_ttv1_mv1-1500_wv1-auto_t1-1_theta1-0p79.cmnd`) to launch the event generation for the simple formulation of the research problem:
+Therefore, you can use the MadGraph installation (`/home/hep/MG5_aMC_v3_1_1/bin/mg5_aMC`) together with the config file from this project (`commands/simple/generate_bsm4top-13TeV_ttv1_mv1-1500_wv1-auto_t1-1_theta1-0p79.cmnd`) to launch the event generation for the simple formulation of the research problem:
 
 ```
 # launch mg5 with default event generation for top-philic resonances model
-/home/hep/MG5_aMC_v2_9_1_2/bin/mg5_aMC /home/localdir/commands/simple/generate_bsm4top-13TeV_ttv1_mv1-1500_wv1-auto_t1-1_theta1-0p79.cmnd
+/home/hep/MG5_aMC_v3_1_1/bin/mg5_aMC /home/localdir/commands/simple/generate_bsm4top-13TeV_ttv1_mv1-1500_wv1-auto_t1-1_theta1-0p79.cmnd
 ```
 
 After leaving the container (`ctrl` + `d`), you can find the output in `output/`:
