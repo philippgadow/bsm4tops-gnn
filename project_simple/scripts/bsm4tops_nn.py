@@ -70,6 +70,18 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
 
     # define the network
     from torch import nn
+@@ -137,33 +137,77 @@ def plotEventVariables(tops_p4):
+    """
+
+    # define histograms
+    h_mass_resonance = hist.Hist.new.Reg(30, 1000, 3200).Int64()
+    h_mass_spectator = hist.Hist.new.Reg(30, 1000, 3200).Int64()
+    h_mass_resonance = hist.Hist.new.Reg(30, 0, 3200).Int64()
+    h_mass_spectator = hist.Hist.new.Reg(30, 0, 3200).Int64()
+    h_dRtt_resonance = hist.Hist.new.Reg(30, 0, 6).Int64()
+    h_dRtt_spectator = hist.Hist.new.Reg(30, 0, 6).Int64()
+    h_dist_resonance = hist.Hist.new.Reg(30, 0, 6).Int64()
+
     from torch.nn import functional as F
 
     class DNN(nn.Module):
@@ -82,9 +94,11 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
         """
         def __init__(self, input_shape):
             super(DNN,self).__init__()
-            self.fc1 = nn.Linear(input_shape, 3)
-            self.fc2 = nn.Linear(3, 5)
-            self.fc3 = nn.Linear(5, 1)
+            layer_one_neurons = 32
+            layer_two_neurons = 32
+            self.fc1 = nn.Linear(input_shape, layer_one_neurons)
+            self.fc2 = nn.Linear(layer_one_neurons,layer_two_neurons)
+            self.fc3 = nn.Linear(layer_two_neurons, 1)
 
         def forward(self,x):
             x = torch.relu(self.fc1(x))
@@ -94,7 +108,8 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
 
     # hyper parameters (used in training)
     learning_rate = 0.01
-    epochs = 100
+    
+    epochs = 300
 
     # define model
     model = DNN(input_shape=X_train.shape[1])

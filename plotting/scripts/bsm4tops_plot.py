@@ -137,33 +137,77 @@ def plotEventVariables(tops_p4):
     """
 
     # define histograms
-    h_mass_resonance = hist.Hist.new.Reg(30, 1000, 3200).Int64()
-    h_mass_spectator = hist.Hist.new.Reg(30, 1000, 3200).Int64()
+    h_mass_resonance = hist.Hist.new.Reg(30, 0, 3200).Int64()
+    h_mass_spectator = hist.Hist.new.Reg(30, 0, 3200).Int64()
     h_dRtt_resonance = hist.Hist.new.Reg(30, 0, 6).Int64()
     h_dRtt_spectator = hist.Hist.new.Reg(30, 0, 6).Int64()
+    h_dist_resonance = hist.Hist.new.Reg(30, 0, 6).Int64()
+    h_dist_spectator = hist.Hist.new.Reg(30, 0, 8).Int64()
+
 
     inv_mass_resonance = (tops_p4[0] + tops_p4[1]).mass
-    # TODO: compute the other observables
-    #       (hint: look into the documentation of the hist and vector packages)
+    inv_mass_spectator = (tops_p4[2] + tops_p4[3]).mass
+    dRtt_resonance = tops_p4[0].deltaR(tops_p4[1])
+    dRtt_spectator = tops_p4[2].deltaR(tops_p4[3])
+
+
+    for i,j,k in zip(tops_p4[0].deltaR(tops_p4[1]),tops_p4[0].deltaR(tops_p4[2]),tops_p4[0].deltaR(tops_p4[3])):
+        h_dist_resonance.fill(min(i,j,k))
+    for i,j,k in zip(tops_p4[1].deltaR(tops_p4[0]),tops_p4[1].deltaR(tops_p4[2]),tops_p4[1].deltaR(tops_p4[3])):
+        h_dist_resonance.fill(min(i,j,k))
+    for i,j,k in zip(tops_p4[2].deltaR(tops_p4[0]),tops_p4[2].deltaR(tops_p4[1]),tops_p4[2].deltaR(tops_p4[3])):
+        h_dist_spectator.fill(min(i,j,k))
+    for i,j,k in zip(tops_p4[3].deltaR(tops_p4[0]),tops_p4[3].deltaR(tops_p4[1]),tops_p4[3].deltaR(tops_p4[2])):
+        h_dist_spectator.fill(min(i,j,k))
+
 
     h_mass_resonance.fill(inv_mass_resonance)
-    # TODO: fill the other histograms with the computed observables
+    h_mass_spectator.fill(inv_mass_spectator)
+    h_dRtt_resonance.fill(dRtt_resonance)
+    h_dRtt_spectator.fill(dRtt_spectator)
     
 
     # style
     hep.style.use(hep.style.ATLAS)
 
     # plots
-    fig, ax = plt.subplots()
-    h_mass_resonance.plot(ax=ax, label=r'$m=1.5$ TeV, $c_{t}=1$, $\theta=0.8$')
+    fig1, ax1 = plt.subplots()
+    h_mass_resonance.plot(ax=ax1, label=r'$m=1.5$ TeV, $c_{t}=1$, $\theta=0.8$')
     plt.xlabel(r'$m_{tt}$ (resonance) [GeV]')
     plt.ylabel('Events')
     plt.legend(loc=1)
-    fig.savefig('mass_resonance.png')
+    fig1.savefig('mass_resonance.png')
     plt.close()
 
-    # TODO: make plots for the other observables
+    fig2, ax2 = plt.subplots()
+    h_mass_spectator.plot(ax=ax2, label=r'$m=1.5$ TeV, $c_{t}=1$, $\theta=0.8$')
+    plt.xlabel(r'$m_{tt}$ (spectator) [GeV]')
+    fig2.savefig('mass_spectator.png')
+    plt.close()
 
+    fig3, ax3 = plt.subplots()
+    h_dRtt_resonance.plot(ax=ax3)
+    plt.xlabel(r'$dR_{tt}$ (resonance)')
+    fig3.savefig('dR_resonance.png')
+    plt.close()
+
+    fig4, ax4 = plt.subplots()
+    h_dRtt_spectator.plot(ax=ax4)
+    plt.xlabel(r'$dR_{tt}$ (spectator)')
+    fig4.savefig('dR_spectator.png')
+    plt.close()
+
+    fig5, ax5 = plt.subplots()
+    h_dist_resonance.plot(ax=ax5)
+    plt.xlabel(r'dist to nearest top (resonance)')
+    fig5.savefig('dist_resonance.png')
+    plt.close()
+
+    fig6, ax6 = plt.subplots()
+    h_dist_spectator.plot(ax=ax6)
+    plt.xlabel(r'dist to nearest top (spectator)')
+    fig6.savefig('dist_spectator.png')
+    plt.close()
     
 
 
