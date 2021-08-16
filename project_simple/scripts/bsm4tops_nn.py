@@ -70,6 +70,18 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
 
     # define the network
     from torch import nn
+@@ -137,33 +137,77 @@ def plotEventVariables(tops_p4):
+    """
+
+    # define histograms
+    h_mass_resonance = hist.Hist.new.Reg(30, 1000, 3200).Int64()
+    h_mass_spectator = hist.Hist.new.Reg(30, 1000, 3200).Int64()
+    h_mass_resonance = hist.Hist.new.Reg(30, 0, 3200).Int64()
+    h_mass_spectator = hist.Hist.new.Reg(30, 0, 3200).Int64()
+    h_dRtt_resonance = hist.Hist.new.Reg(30, 0, 6).Int64()
+    h_dRtt_spectator = hist.Hist.new.Reg(30, 0, 6).Int64()
+    h_dist_resonance = hist.Hist.new.Reg(30, 0, 6).Int64()
+
     from torch.nn import functional as F
 
     class DNN(nn.Module):
@@ -96,6 +108,7 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
 
     # hyper parameters (used in training)
     learning_rate = 0.01
+    
     epochs = 300
 
     # define model

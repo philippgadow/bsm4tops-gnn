@@ -3,7 +3,8 @@ import seaborn as sns
 import mplhep as hep
 from os import makedirs
 from os.path import join
-
+import networkx as nx
+from torch_geometric.utils import to_networkx
 
 # Plotting helper functions
 
@@ -69,3 +70,16 @@ def visualizeROC(preds, y, outputname):
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.35)
     fig.savefig(outputname)
+
+
+def visualizeGraph(data, outputname):
+    G = to_networkx(data, to_undirected=True)
+    color=data.y
+    fig = plt.figure(figsize=(7,7))
+    plt.xticks([])
+    plt.yticks([])
+    nx.draw_networkx(G, pos=nx.spring_layout(G, seed=42), with_labels=True,
+                     node_color=color, cmap="Set2")
+    fig.savefig(outputname)
+    print(f'Created illustration of graph in {outputname}')
+
