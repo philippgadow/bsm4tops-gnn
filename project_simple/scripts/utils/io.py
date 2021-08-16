@@ -1,5 +1,8 @@
 import uproot
+import vector
 import numpy as np
+import pandas as pd
+
 
 # Input / Output helper functions
 
@@ -11,7 +14,7 @@ def getDataFrame(filename, treename='LHEF'):
                 [
                     "Particle.PID", "Particle.Mother1", "Particle.Mother2",
                     "Particle.PT", "Particle.Eta", "Particle.Phi", "Particle.M"
-                ],
+                    ],
                 library="pd")
     return df
 
@@ -32,8 +35,23 @@ def cleanDataFrame(df):
 
 
 def augmentDataFrame(df):
-    """Utility function to add additional variables to data frame (e.g. invariant mass or DeltaR)."""
-
-    # TODO: add variables to dataframe, e.g. a useful variable could be the closest distance to another top quark
-
+#    """Utility function to add additional variables to data frame (e.g. invariant mass or DeltaR)."""
+#    df = df.assign(closest_distance=0.0)
+#    df = df.assign(invariant_mass=0.0)
+#    for index in range(0,20000):
+#        top = [vector.obj(pt=df.xs(index)['Particle.PT'][3],phi=df.xs(index)['Particle.Phi'][3],eta=df.xs(index)['Particle.Eta'][3],mass=df.xs(index)['Particle.M'][3]),
+#                vector.obj(pt=df.xs(index)['Particle.PT'][4],phi=df.xs(index)['Particle.Phi'][4],eta=df.xs(index)['Particle.Eta'][4],mass=df.xs(index)['Particle.M'][4]),
+#                vector.obj(pt=df.xs(index)['Particle.PT'][5],phi=df.xs(index)['Particle.Phi'][5],eta=df.xs(index)['Particle.Eta'][5],mass=df.xs(index)['Particle.M'][5]),
+#                vector.obj(pt=df.xs(index)['Particle.PT'][6],phi=df.xs(index)['Particle.Phi'][6],eta=df.xs(index)['Particle.Eta'][6],mass=df.xs(index)['Particle.M'][6])]
+#        df.at[(index,3),'closest_distance'] = min(top[0].deltaR(top[1]),top[0].deltaR(top[2]),top[0].deltaR(top[3]))
+#        df.at[(index,3),'invariant_mass'] = max((top[0] + top[1]).mass,(top[0] + top[2]).mass,(top[0] + top[3]).mass)
+#        df.at[(index,4),'closest_distance'] = min(top[1].deltaR(top[0]),top[1].deltaR(top[2]),top[1].deltaR(top[3]))
+#        df.at[(index,4),'invariant_mass'] = max((top[1] + top[0]).mass,(top[1] + top[2]).mass,(top[1] + top[3]).mass)
+#        df.at[(index,5),'closest_distance'] = min(top[2].deltaR(top[0]),top[2].deltaR(top[1]),top[2].deltaR(top[3]))
+#        df.at[(index,5),'invariant_mass'] = max((top[2] + top[0]).mass,(top[2] + top[1]).mass,(top[2] + top[3]).mass)
+#        df.at[(index,6),'closest_distance'] = min(top[3].deltaR(top[0]),top[3].deltaR(top[1]),top[3].deltaR(top[2]))
+#        df.at[(index,6),'invariant_mass'] = max((top[3] + top[0]).mass,(top[3] + top[1]).mass,(top[3] + top[2]).mass)
+#        if index % 1000 == 0:
+#            print(index)
+#    print(df)
     return df

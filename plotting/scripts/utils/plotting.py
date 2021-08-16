@@ -1,32 +1,33 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 import mplhep as hep
-import networkx as nx
-from torch_geometric.utils import to_networkx
+from os import makedirs
+from os.path import join
 
 
 # Plotting helper functions
 
-def visualizeGraph(data, loss=None):
-    G = to_networkx(data, to_undirected=True)
-    color=data.y
-    fig = plt.figure(figsize=(7,7))
-    plt.xticks([])
-    plt.yticks([])
-    nx.draw_networkx(G, pos=nx.spring_layout(G, seed=42), with_labels=True,
-                     node_color=color, cmap="Set2")
-    fig.savefig('test_graph.png')
+
+def visualizeDataFrame(df, outputdir):
+    # create output directory
+    makedirs(outputdir, exist_ok=True)
+
+    # make overview plot
+    sns_plot = sns.pairplot(df, hue='resonance', height=2.5)
+    plt.savefig(join(outputdir, 'overview.png'))
+
 
 
 def visualizeBDTScore(twoclass_output, y, class_names, plot_range, plot_colors, outputname):
     fig, ax = plt.subplots()
     for i, n, c in zip(range(2), class_names, plot_colors):
         plt.hist(twoclass_output[y == i],
-                 bins=10,
-                 range=plot_range,
-                 facecolor=c,
-                 label='Class %s' % n,
-                 alpha=.5,
-                 edgecolor='k')
+                bins=10,
+                range=plot_range,
+                facecolor=c,
+                label='Class %s' % n,
+                alpha=.5,
+                edgecolor='k')
     x1, x2, y1, y2 = plt.axis()
     plt.axis((x1, x2, y1, y2 * 1.2))
     plt.legend(loc='upper right')
@@ -36,6 +37,16 @@ def visualizeBDTScore(twoclass_output, y, class_names, plot_range, plot_colors, 
 
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.35)
+    fig.savefig(outputname)
+
+
+def visualizeLossAcc(values, title, outputname):
+    fig, ax = plt.subplots()
+    plt.plot(values)
+    plt.title(f'{title} vs Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel(f'{title}')
+    plt.tight_layout()
     fig.savefig(outputname)
 
 

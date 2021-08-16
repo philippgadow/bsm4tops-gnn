@@ -40,6 +40,16 @@ def visualizeBDTScore(twoclass_output, y, class_names, plot_range, plot_colors, 
     fig.savefig(outputname)
 
 
+def visualizeLossAcc(values, title, outputname):
+    fig, ax = plt.subplots()
+    plt.plot(values)
+    plt.title(f'{title} vs Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel(f'{title}')
+    plt.tight_layout()
+    fig.savefig(outputname)
+
+
 def visualizeROC(preds, y, outputname):
     import sklearn.metrics as metrics
     # calculate the fpr and tpr for all thresholds of the classification

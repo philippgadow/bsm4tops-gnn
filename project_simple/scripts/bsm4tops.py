@@ -44,7 +44,7 @@ def runSimpleClassifier(X_train, X_test, y_train, y_test):
     #       from the resonance and top quarks from associated production and come up with a better
     #       value
 
-    pt_cut = 100.
+    pt_cut = 350.
     preds = (X_test['Particle.PT'] > pt_cut).astype(int).to_numpy()
 
     # TODO: check if adding a second requirement, e.g. on eta could improve the selection
@@ -79,7 +79,7 @@ def runNearestNeighbours(X_train, X_test, y_train, y_test):
 
 
     # set up classifier
-    knn = KNeighborsClassifier()
+    knn = KNeighborsClassifier(400)
 
     # train classifier
     knn.fit(X_train, y_train)
@@ -106,9 +106,9 @@ def runBDT(X_train, X_test, y_train, y_test):
     from sklearn.tree import DecisionTreeClassifier
 
     # set up classifier
-    bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=3),
+    bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=7),
                              algorithm="SAMME",
-                             n_estimators=200)
+                             n_estimators=400)
     # train classifier
     bdt.fit(X_train, y_train)
 
