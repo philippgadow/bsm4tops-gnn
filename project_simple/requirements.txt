@@ -36,3 +36,4 @@ typing-extensions==3.10.0.0
 uhi==0.3.0
 uproot==4.0.11
 urllib3==1.26.6
+vector==0.8.4
