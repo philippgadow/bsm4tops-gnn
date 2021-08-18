@@ -115,11 +115,14 @@ def runGNNClassifier(df):
         for i in range(len(dataset)):
             data = dataset[i]
             loss = train(model, data, optimizer, criterion)
-        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}')
+            print(f'Epoch: {epoch:03d}, Graph: {i:04d}, Loss: {loss:.4f}')
 
 
     # evaluate model
     model.eval()
+
+    # TODO: re-write evaluation function such that it provides a summary not only for the last graph
+    #       which happens to be the last element of "dataset"
 
     def test(model, data):
         model.eval()
