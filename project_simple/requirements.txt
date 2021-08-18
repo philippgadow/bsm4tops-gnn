@@ -28,9 +28,6 @@ seaborn==0.11.1
 six==1.16.0
 threadpoolctl==2.2.0
 torch==1.9.0
-torch-geometric==1.7.2
-torch-scatter==2.0.8
-torch-sparse==0.6.11
 tqdm==4.61.1
 typing-extensions==3.10.0.0
 uhi==0.3.0
