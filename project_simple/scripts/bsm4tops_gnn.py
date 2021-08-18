@@ -48,7 +48,7 @@ def runGNNClassifier(df):
     df.to_pickle(join("data", "raw", "bsm4tops_dataset.pkl"))
 
     # create dataset and save processed data also to disk
-    dataset = BSM4topsDataset('data/')
+    dataset = BSM4topsDataset('data/', 'bsm4tops')
     dataset = dataset.shuffle()
 
     print(f'Dataset: {dataset}:')
@@ -66,6 +66,7 @@ def runGNNClassifier(df):
     # Gather some statistics about the graph.
     print(f'Number of nodes: {data.num_nodes}')
     print(f'Number of edges: {data.num_edges}')
+    print(f'Number of node features: {data.num_node_features}')
     print(f'Contains isolated nodes: {data.contains_isolated_nodes()}')
     print(f'Contains self-loops: {data.contains_self_loops()}')
     print(f'Is undirected: {data.is_undirected()}')
@@ -73,179 +74,63 @@ def runGNNClassifier(df):
     # visualize graph
     visualizeGraph(data, join('plots', 'plot_graph_example.png'))
 
-    # # build GNN - shamelessly stolen and slightly modified from Javier Duarte's course
-    # # https://github.com/jmduarte/capstone-particle-physics-domain/blob/master/weeks/08-extending.ipynb
-    # import torch.nn as nn
-    # import torch.nn.functional as F
-    # import torch_geometric.transforms as T
-    # from torch_geometric.nn import EdgeConv, global_mean_pool
-    # from torch.nn import Sequential as Seq, Linear as Lin, ReLU, BatchNorm1d
-    # from torch_scatter import scatter_mean
-    # from torch_geometric.nn import MetaLayer
+    # build GNN
+    import torch
+    import torch.nn.functional as F
+    from torch_geometric.nn import GCNConv
 
-    # inputs = 4
-    # hidden = 12
-    # outputs = 1
+    class Net(torch.nn.Module):
+        def __init__(self):
+            super(Net, self).__init__()
+            self.conv1 = GCNConv(dataset.num_node_features, 16)
+            self.conv2 = GCNConv(16, dataset.num_classes)
 
-    # class EdgeBlock(torch.nn.Module):
-    #     def __init__(self):
-    #         super(EdgeBlock, self).__init__()
-    #         self.edge_mlp = Seq(Lin(inputs*2, hidden), 
-    #                             BatchNorm1d(hidden),
-    #                             ReLU(),
-    #                             Lin(hidden, hidden))
+        def forward(self, data):
+            x, edge_index = data.x, data.edge_index
 
-    #     def forward(self, src, dest, edge_attr, u, batch):
-    #         out = torch.cat([src, dest], 1)
-    #         return self.edge_mlp(out)
-    # class NodeBlock(torch.nn.Module):
-    #     def __init__(self):
-    #         super(NodeBlock, self).__init__()
-    #         self.node_mlp_1 = Seq(Lin(inputs+hidden, hidden), 
-    #                               BatchNorm1d(hidden),
-    #                               ReLU(), 
-    #                               Lin(hidden, hidden))
-    #         self.node_mlp_2 = Seq(Lin(inputs+hidden, hidden), 
-    #                               BatchNorm1d(hidden),
-    #                               ReLU(), 
-    #                               Lin(hidden, hidden))
+            x = self.conv1(x, edge_index)
+            x = F.relu(x)
+            x = F.dropout(x, training=self.training)
+            x = self.conv2(x, edge_index)
 
-    #     def forward(self, x, edge_index, edge_attr, u, batch):
-    #         row, col = edge_index
-    #         out = torch.cat([x[row], edge_attr], dim=1)
-    #         out = self.node_mlp_1(out)
-    #         out = scatter_mean(out, col, dim=0, dim_size=x.size(0))
-    #         out = torch.cat([x, out], dim=1)
-    #         return self.node_mlp_2(out)
-    # class GlobalBlock(torch.nn.Module):
-    #     def __init__(self):
-    #         super(GlobalBlock, self).__init__()
-    #         self.global_mlp = Seq(Lin(hidden, hidden),                               
-    #                               BatchNorm1d(hidden),
-    #                               ReLU(), 
-    #                               Lin(hidden, outputs))
+            return F.log_softmax(x, dim=1)
 
-    #     def forward(self, x, edge_index, edge_attr, u, batch):
-    #         out = scatter_mean(x, batch, dim=0)
-    #         return self.global_mlp(out)
-    # class InteractionNetwork(torch.nn.Module):
-    #     def __init__(self):
-    #         super(InteractionNetwork, self).__init__()
-    #         self.interactionnetwork = MetaLayer(EdgeBlock(), NodeBlock(), GlobalBlock())
-    #         self.bn = BatchNorm1d(inputs)
-            
-    #     def forward(self, x, edge_index, batch):
-            
-    #         x = self.bn(x)
-    #         x, edge_attr, u = self.interactionnetwork(x, edge_index, None, None, batch)
-    #         return u
+    model = Net()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+    criterion = F.nll_loss
 
-    # model = InteractionNetwork()
-    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+    # train model
+    model.train()
 
-    # @torch.no_grad()
-    # def test(model,loader,total,batch_size,leave=False):
-    #     model.eval()
-    #     xentropy = nn.CrossEntropyLoss(reduction='mean')
-    #     sum_loss = 0.
-    #     t = tqdm(enumerate(loader),total=total/batch_size,leave=leave)
-    #     for i,data in t:
-    #         data = data.to(device)
-    #         y = torch.argmax(data.y,dim=1)
-    #         batch_output = model(data.x, data.edge_index, data.batch)
-    #         batch_loss_item = xentropy(batch_output, y).item()
-    #         sum_loss += batch_loss_item
-    #         t.set_description("loss = %.5f" % (batch_loss_item))
-    #         t.refresh() # to show immediately the update
-    #     return sum_loss/(i+1)
+    def train(model, data, optimizer, criterion):
+        model.train()
+        optimizer.zero_grad()
+        out = model(data)
+        loss = criterion(out[data.train_mask], data.y[data.train_mask])  # Compute the loss solely based on the training nodes.
+        loss.backward()  # Derive gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        return loss
 
-    # def train(model, optimizer, loader, total, batch_size,leave=False):
-    #     model.train()
-    #     xentropy = nn.CrossEntropyLoss(reduction='mean')
-    #     sum_loss = 0.
-    #     t = tqdm(enumerate(loader),total=total/batch_size,leave=leave)
-    #     for i, data in t:
-    #         data = data.to(device)
-    #         y = torch.argmax(data.y,dim=1)
-    #         optimizer.zero_grad()
-    #         batch_output = model(data.x, data.edge_index, data.batch)
-    #         batch_loss = xentropy(batch_output, y)
-    #         batch_loss.backward()
-    #         batch_loss_item = batch_loss.item()
-    #         t.set_description("loss = %.5f" % batch_loss_item)
-    #         t.refresh() # to show immediately the update
-    #         sum_loss += batch_loss_item
-    #         optimizer.step()
-    #     return sum_loss/(i+1)
-
-    # from torch_geometric.data import Data, DataListLoader, Batch
-    # from torch.utils.data import random_split
-
-    # def collate(items):
-    #     return items
-    #     l = sum(items, [])
-    #     return Batch.from_data_list(l)
+    for epoch in range(10):
+        for i in range(len(dataset)):
+            data = dataset[i]
+            loss = train(model, data, optimizer, criterion)
+        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}')
 
 
-    # torch.manual_seed(0)
-    # valid_frac = 0.10
-    # full_length = len(dataset)
-    # valid_num = int(valid_frac*full_length)
-    # batch_size = 32
+    # evaluate model
+    model.eval()
 
-    # train_dataset, valid_dataset = random_split(dataset, [full_length-valid_num,valid_num])
+    def test(model, data):
+        model.eval()
+        out = model(data)
+        pred = out.argmax(dim=1)  # Use the class with highest probability.
+        test_correct = pred[data.test_mask] == data.y[data.test_mask]  # Check against ground-truth labels.
+        test_acc = int(test_correct.sum()) / int(data.test_mask.sum())  # Derive ratio of correct predictions.
+        return test_acc
 
-    # train_loader = DataListLoader(train_dataset, batch_size=batch_size, pin_memory=True, shuffle=True)
-    # train_loader.collate_fn = collate
-    # valid_loader = DataListLoader(valid_dataset, batch_size=batch_size, pin_memory=True, shuffle=False)
-    # valid_loader.collate_fn = collate
-    # # test_loader = DataListLoader(valid_dataset, batch_size=batch_size, pin_memory=True, shuffle=False)
-    # # test_loader.collate_fn = collate
-
-    # train_samples = len(train_dataset)
-    # valid_samples = len(valid_dataset)
-    # # test_samples = len(valid_dataset)
-
-    # import os.path as osp
-    # n_epochs = 10
-    # stale_epochs = 0
-    # best_valid_loss = 99999
-    # patience = 5
-    # t = tqdm(range(0, n_epochs))
-
-    # for epoch in t:
-    #     # loss = train(model, optimizer, train_loader, train_samples, batch_size,leave=bool(epoch==n_epochs-1))
-    #     loss = train(model, optimizer, train_dataset, train_samples, batch_size,leave=bool(epoch==n_epochs-1))
-    #     # valid_loss = test(model, valid_loader, valid_samples, batch_size,leave=bool(epoch==n_epochs-1))
-    #     valid_loss = test(model, valid_dataset, valid_samples, batch_size,leave=bool(epoch==n_epochs-1))
-    #     print('Epoch: {:02d}, Training Loss:   {:.4f}'.format(epoch, loss))
-    #     print('           Validation Loss: {:.4f}'.format(valid_loss))
-
-    #     if valid_loss < best_valid_loss:
-    #         best_valid_loss = valid_loss
-    #         modpath = osp.join('interactionnetwork_best.pth')
-    #         print('New best model saved to:',modpath)
-    #         torch.save(model.state_dict(),modpath)
-    #         stale_epochs = 0
-    #     else:
-    #         print('Stale epoch')
-    #         stale_epochs += 1
-    #     if stale_epochs >= patience:
-    #         print('Early stopping after %i stale epochs'%patience)
-    #         break
-
-
-    # model.eval()
-    # t = tqdm(enumerate(test_loader),total=test_samples/batch_size)
-    # y_test = []
-    # y_predict = []
-    # for i,data in t:
-    #     data = data.to(device)    
-    #     batch_output = model(data.x, data.edge_index, data.batch)    
-    #     y_predict.append(batch_output.detach().cpu().numpy())
-    #     y_test.append(data.y.cpu().numpy())
-    # y_test = np.concatenate(y_test)
-    # y_predict = np.concatenate(y_predict)
+    test_acc = test(model, data)
+    print(f'Test Accuracy: {test_acc:.4f}')
 
 
 def main():
