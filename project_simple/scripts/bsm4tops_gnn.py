@@ -112,7 +112,7 @@ def runGNNClassifier(df):
         return loss
 
     for epoch in range(10):
-        for i in range(len(dataset)):
+        for i in range(len(dataset))[0:int(0.8*len(dataset))]:
             data = dataset[i]
             loss = train(model, data, optimizer, criterion)
             print(f'Epoch: {epoch:03d}, Graph: {i:04d}, Loss: {loss:.4f}')
@@ -129,10 +129,16 @@ def runGNNClassifier(df):
         out = model(data)
         pred = out.argmax(dim=1)  # Use the class with highest probability.
         test_correct = pred[data.test_mask] == data.y[data.test_mask]  # Check against ground-truth labels.
-        test_acc = int(test_correct.sum()) / int(data.test_mask.sum())  # Derive ratio of correct predictions.
-        return test_acc
+        # test_acc = int(test_correct.sum()) / int(data.test_mask.sum())  # Derive ratio of correct predictions.
+        return int(test_correct.sum()), int(data.test_mask.sum())
 
-    test_acc = test(model, data)
+    a_tot = 0
+    b_tot = 0
+    for i in range(len(dataset))[int(0.8*len(dataset)): -1]: 
+        a, b = test(model, data)
+        a_tot += a
+        b_tot += b
+    test_acc = a_tot / b_tot
     print(f'Test Accuracy: {test_acc:.4f}')
 
 

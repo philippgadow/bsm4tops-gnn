@@ -50,7 +50,7 @@ class BSM4topsDataset(InMemoryDataset):
             data = Data(x=x, y=y, edge_index=edge_index)
             data.train_mask = torch.tensor([1,1,1,1], dtype=torch.bool)
             data.val_mask = torch.tensor([0,0,0,0], dtype=torch.bool)
-            data.test_mask = torch.tensor([0,1,0,1], dtype=torch.bool)
+            data.test_mask = torch.tensor([1,1,1,1], dtype=torch.bool)
             data_list.append(data)
         self.data, self.slices = self.collate(data_list)
         torch.save((self.data, self.slices), self.processed_paths[0])
