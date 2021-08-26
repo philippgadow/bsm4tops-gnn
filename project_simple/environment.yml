@@ -1,6 +1,7 @@
 name: bsm4tops
 channels:
   - rusty1s
+  - dglteam
   - pytorch
   - conda-forge
   - defaults
@@ -23,6 +24,7 @@ dependencies:
   - cycler=0.10.0=py_2
   - dbus=1.13.6=h48d8840_2
   - decorator=4.4.2=py_0
+  - dgl=0.7.0=py39_0
   - expat=2.4.1=h9c3ff4c_0
   - ffmpeg=4.3=hf484d3e_0
   - fontconfig=2.13.1=hba837de_1005
@@ -150,3 +152,4 @@ dependencies:
   - zlib=1.2.11=h516909a_1010
   - zstandard=0.15.2=py39h3811e60_0
   - zstd=1.4.9=ha95c52a_0
+prefix: /nfs/dust/atlas/user/pgadow/bsm4top/bsm4tops-gnn/project_simple/conda/envs/bsm4tops
