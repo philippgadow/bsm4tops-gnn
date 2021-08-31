@@ -132,6 +132,7 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
 
 
     # visualise loss and accuracy during training
+    makedirs('plots', exist_ok=True)
     visualizeLossAcc(losses, 'Loss', join('plots', 'dnn_loss_train.png'))
     visualizeLossAcc(accur, 'Accuracy', join('plots', 'dnn_accur_train.png'))
 
@@ -142,7 +143,6 @@ def runDNNClassifier(X_train, X_test, y_train, y_test):
     preds = model(X_test).detach().numpy()
 
     # plot ROC curve
-    makedirs('plots', exist_ok=True)
     visualizeROC(preds, y_test, join('plots', 'dnn_ROC_test.png'))
 
 
