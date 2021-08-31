@@ -152,4 +152,3 @@ dependencies:
   - zlib=1.2.11=h516909a_1010
   - zstandard=0.15.2=py39h3811e60_0
   - zstd=1.4.9=ha95c52a_0
-prefix: /nfs/dust/atlas/user/pgadow/bsm4top/bsm4tops-gnn/project_simple/conda/envs/bsm4tops
