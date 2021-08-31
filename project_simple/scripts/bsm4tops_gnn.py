@@ -15,6 +15,7 @@ from utils import BSM4topsDataset, SAGENet
 
 
 def getArgumentParser():
+    """Get argument parser to provide command line arguments."""
     parser = ArgumentParser()
     parser.add_argument('inputFile', help='Path to ROOT input file with 4top signal events.')
     parser.add_argument('--epochs', help='Number of epochs in training', type=int, default=20)
@@ -23,6 +24,14 @@ def getArgumentParser():
 
 
 def evaluate(model, graph, features, labels):
+    """Evaluate accuracy of GNN SAGEConv model.
+    Sets model in evaluation mode (GNN weights cannot be altered) and
+    computes number of correctly predicted nodes.
+
+    Output:
+    - tuple of (n_correct, n_total) node multiplicities
+
+    Taken and slightly adapted from: https://docs.dgl.ai/en/0.6.x/guide/training-node.html#"""
     model.eval()
     with torch.no_grad():
         logits = model(graph, features)
@@ -32,6 +41,21 @@ def evaluate(model, graph, features, labels):
 
 
 def runGNNClassifier(args):
+    """Run graph-neural-network-based classification for graph nodes based on SAGEConv approach.
+    - Tutorial which served as inspiration: https://docs.dgl.ai/en/0.6.x/guide/training-node.html#
+    - Paper: https://arxiv.org/pdf/1706.02216.pdf
+
+    The data is read in from the ROOT file and parsed into a graph dataset.
+    More details in utils/dataset.py
+
+    The GNN is defined in utils/model.py
+
+    The training and evaluation is done by splitting the dataset into an 80% training and 20% testing dataset.
+    For the sake of shuffling the samples, GraphDataLoaders are used but with a batch size of 1 to avoid minibatches of graphs.
+    
+    Args:
+        args: command line arguments provided by ArgumentParser
+    """
     # create dataset
     print('Creating dataset...')
     dataset = BSM4topsDataset(args.inputFile)
