@@ -20,6 +20,7 @@ def getArgumentParser():
     parser.add_argument('inputFile', help='Path to ROOT input file with 4top signal events.')
     parser.add_argument('--epochs', help='Number of epochs in training', type=int, default=20)
     parser.add_argument('--hidden_features', help='Number of hidden feature representations in GNN', type=int, default=100)
+    parser.add_argument('--raw_node_features', action='store_true', help='Do not scale and normalise node features')
     return parser
 
 
@@ -58,7 +59,8 @@ def runGNNClassifier(args):
     """
     # create dataset
     print('Creating dataset...')
-    dataset = BSM4topsDataset(args.inputFile)
+    scale_node_features = not args.raw_node_features
+    dataset = BSM4topsDataset(args.inputFile, scale_node_features)
 
     # set up GNN and optimizer
     model = SAGENet(in_feats=dataset.dim_nfeats, hid_feats=args.hidden_features, out_feats=dataset.num_classes)
