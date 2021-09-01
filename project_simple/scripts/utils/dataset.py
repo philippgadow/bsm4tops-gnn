@@ -46,11 +46,30 @@ class BSM4topsDataset(InMemoryDataset):
                               [new_df['Particle.PT'].to_numpy()[2], new_df['Particle.Eta'].to_numpy()[2], new_df['Particle.Phi'].to_numpy()[2], new_df['Particle.M'].to_numpy()[0]],
                               [new_df['Particle.PT'].to_numpy()[3], new_df['Particle.Eta'].to_numpy()[3], new_df['Particle.Phi'].to_numpy()[3], new_df['Particle.M'].to_numpy()[0]]],
                                   dtype=torch.float)
-            y = torch.LongTensor(new_df['resonance'].to_numpy())
+            #y = torch.LongTensor(new_df['resonance'].to_numpy())
+            y = 0
+            print(new_df['resonance'].to_numpy())
+            if new_df['resonance'].to_numpy()[0] == 1:
+                if new_df['resonance'].to_numpy()[1] == 1:
+                    y = 0
+                elif new_df['resonance'].to_numpy()[2] == 1:
+                    y = 1
+                elif new_df['resonance'].to_numpy()[3] == 1:
+                    y = 2
+            elif new_df['resonance'].to_numpy()[1] == 1:
+                if new_df['resonance'].to_numpy()[2] == 1:
+                    y = 3
+                elif new_df['resonance'].to_numpy()[3] == 1:
+                    y = 4
+            elif new_df['resonance'].to_numpy()[2] == 1:
+                if new_df['resonance'].to_numpy()[3] == 1:
+                    y = 5
+            print(y)
             data = Data(x=x, y=y, edge_index=edge_index)
-            data.train_mask = torch.tensor([1,1,1,1], dtype=torch.bool)
-            data.val_mask = torch.tensor([0,0,0,0], dtype=torch.bool)
-            data.test_mask = torch.tensor([0,1,0,1], dtype=torch.bool)
+            print(data)
+            #data.train_mask = torch.tensor([1,1,1,1], dtype=torch.bool)
+            #data.val_mask = torch.tensor([0,0,0,0], dtype=torch.bool)
+            #data.test_mask = torch.tensor([1,1,1,1], dtype=torch.bool)
             data_list.append(data)
         self.data, self.slices = self.collate(data_list)
         torch.save((self.data, self.slices), self.processed_paths[0])

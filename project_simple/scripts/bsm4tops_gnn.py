@@ -51,7 +51,7 @@ def runGNNClassifier(df):
     dataset = BSM4topsDataset('data/', 'bsm4tops')
     dataset = dataset.shuffle()
 
-    print(f'Dataset: {dataset}:')
+    print(f"Dataset: {dataset}:")
     print('======================')
     print(f'Number of graphs: {len(dataset)}')
     print(f'Number of features: {dataset.num_features}')
@@ -72,69 +72,71 @@ def runGNNClassifier(df):
     print(f'Is undirected: {data.is_undirected()}')
 
     # visualize graph
-    visualizeGraph(data, join('plots', 'plot_graph_example.png'))
+    #visualizeGraph(data, join('plots', 'plot_graph_example.png'))
 
     # build GNN
     import torch
     import torch.nn.functional as F
-    from torch_geometric.nn import GCNConv
-
+    from torch_geometric.nn import GCNConv, global_max_pool
+    
     class Net(torch.nn.Module):
         def __init__(self):
             super(Net, self).__init__()
             self.conv1 = GCNConv(dataset.num_node_features, 16)
-            self.conv2 = GCNConv(16, dataset.num_classes)
-
-        def forward(self, data):
-            x, edge_index = data.x, data.edge_index
+            self.conv2 = GCNConv(16, 16)
+            self.lin = nn.Linear(16,6)
+        def forward(self, x, edge_index, batch):
 
             x = self.conv1(x, edge_index)
             x = F.relu(x)
-            x = F.dropout(x, training=self.training)
             x = self.conv2(x, edge_index)
 
-            return F.log_softmax(x, dim=1)
+            x = global_max_pool(x, batch)
+
+            x = F.dropout(x, training=self.training)
+            x = self.lin(x)
+            return x
 
     model = Net()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
     criterion = F.nll_loss
+    from torch_geometric.data import DataLoader
+
+    train_dataset = dataset[:18000]
+    test_dataset = dataset[18000:]
+
+    print(f'Number of training graphs: {len(train_dataset)}')
+    print(f'Number of test graphs: {len(test_dataset)}')
+
+    train_loader = DataLoader(train_dataset, batch_size=20, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=20, shuffle=False) 
 
     # train model
-    model.train()
 
-    def train(model, data, optimizer, criterion):
+    def train():
         model.train()
-        optimizer.zero_grad()
-        out = model(data)
-        loss = criterion(out[data.train_mask], data.y[data.train_mask])  # Compute the loss solely based on the training nodes.
-        loss.backward()  # Derive gradients.
-        optimizer.step()  # Update parameters based on gradients.
-        return loss
+        for data in train_loader:  # Iterate in batches over the training dataset.
+            out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
+            loss = criterion(out, data.y)  # Compute the loss.
+            loss.backward()  # Derive gradients.
+            optimizer.step()  # Update parameters based on gradients.
+            optimizer.zero_grad()  # Clear gradients.
 
-    for epoch in range(10):
-        for i in range(len(dataset)):
-            data = dataset[i]
-            loss = train(model, data, optimizer, criterion)
-            print(f'Epoch: {epoch:03d}, Graph: {i:04d}, Loss: {loss:.4f}')
-
-
-    # evaluate model
-    model.eval()
-
-    # TODO: re-write evaluation function such that it provides a summary not only for the last graph
-    #       which happens to be the last element of "dataset"
-
-    def test(model, data):
+    def test(loader):
         model.eval()
-        out = model(data)
-        pred = out.argmax(dim=1)  # Use the class with highest probability.
-        test_correct = pred[data.test_mask] == data.y[data.test_mask]  # Check against ground-truth labels.
-        test_acc = int(test_correct.sum()) / int(data.test_mask.sum())  # Derive ratio of correct predictions.
-        return test_acc
 
-    test_acc = test(model, data)
-    print(f'Test Accuracy: {test_acc:.4f}')
+        correct = 0
+        for data in loader:  # Iterate in batches over the training/test dataset.
+            out = model(data.x, data.edge_index, data.batch)  
+            pred = out.argmax(dim=1)  # Use the class with highest probability.
+            correct += int((pred == data.y).sum())  # Check against ground-truth labels.
+        return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
+
+    for epoch in range(1, 20):
+        train()
+        test_acc = test(test_loader)
+        print(f'Epoch: {epoch:03d}, Test Acc: {test_acc:.4f}')
 
 def main():
     # get command line arguments
