@@ -11,9 +11,8 @@ class SAGENet(nn.Module):
         self.conv2 = SAGEConv(
             in_feats=hid_feats, out_feats=out_feats, aggregator_type='mean')
 
-    def forward(self, graph, inputs):
-        # inputs are features of nodes
-        h = self.conv1(graph, inputs)
+    def forward(self, graph, node_features, edge_features=None):
+        h = self.conv1(graph, node_features, edge_features)
         h = F.relu(h)
         h = self.conv2(graph, h)
         return h

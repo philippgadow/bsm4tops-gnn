@@ -4,7 +4,8 @@ import numpy as np
 from dgl.data import DGLDataset
 from tqdm import tqdm
 from copy import deepcopy
-from utils import getDataFrame, cleanDataFrame, augmentDataFrame
+from utils.io import getDataFrame, cleanDataFrame, augmentDataFrame
+from utils.functions import compute_dR
 
 
 class BSM4topsDataset(DGLDataset):
@@ -36,26 +37,19 @@ class BSM4topsDataset(DGLDataset):
             # - six edges (links between top quarks t1 and t2) with features
             #   - dR(t1, t2)
             node_features = new_df[['Particle.PT', 'Particle.Eta', 'Particle.Phi', 'Particle.M']].astype(np.float32).to_numpy()
-            # normalise node features in preprocessing
+            edge_features = compute_dR(new_df, node_features, edges_src, edges_dst)
+            # take inverse delta_R as edge features to weight nodes close-by with higher importance
+            edge_features = np.reciprocal(edge_features)
+
+            # normalise features in preprocessing
             if self.normalise_features:
                 from sklearn.preprocessing import StandardScaler
                 sc = StandardScaler()
                 node_features = sc.fit_transform(node_features)
+
             node_features = torch.from_numpy(node_features)
+            edge_features = torch.from_numpy(edge_features)
             node_labels = torch.from_numpy(deepcopy(new_df['resonance'].astype(np.int64).to_numpy()))
-            def compute_dR(node_features, edges_src, edges_dst):
-                import vector
-                result = []
-                v_array = vector.arr({
-                    "pt": new_df['Particle.PT'],
-                    "phi": new_df['Particle.Eta'],
-                    "eta": new_df['Particle.Phi'],
-                    "M": new_df['Particle.M'],
-                })
-                for i, j in zip(edges_src, edges_dst):
-                    result.append(v_array[i].deltaR(v_array[j]))
-                return np.array(result)
-            edge_features = torch.from_numpy(compute_dR(node_features, edges_src, edges_dst))
 
             # construct DGL graph
             g = dgl.graph((edges_src, edges_dst), num_nodes=num_nodes)
