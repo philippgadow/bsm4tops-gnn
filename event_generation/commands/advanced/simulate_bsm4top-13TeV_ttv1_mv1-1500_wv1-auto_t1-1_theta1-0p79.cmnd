@@ -7,6 +7,7 @@ launch
 # set shower, madspin decay or analysis
 shower=Pythia8
 detector=Delphes
+analysis=ExRoot
 done
 ###################################
 # set param and run card settings #
